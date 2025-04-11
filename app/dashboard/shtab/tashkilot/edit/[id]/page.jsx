@@ -14,7 +14,7 @@ export default function EditTashkilotPage() {
   const [xabar, setXabar] = useState("");
 
   useEffect(() => {
-    // Hozircha mock: keyinchalik API orqali chaqiriladi
+    // Mock — keyinchalik API'dan olish
     const mockData = {
       id,
       nomi: "Tuman elektr tarmoqlari",
@@ -41,12 +41,8 @@ export default function EditTashkilotPage() {
       return;
     }
 
-    console.log("✏️ Tahrirlangan tashkilot:", {
-      id,
-      ...form,
-    });
-
-    setXabar("✅ Tashkilot ma’lumotlari yangilandi!");
+    console.log("✏️ Tahrirlangan tashkilot:", { id, ...form });
+    setXabar("✅ Tashkilot yangilandi!");
   };
 
   return (
@@ -88,7 +84,6 @@ export default function EditTashkilotPage() {
             <option value="faol emas">Faol emas</option>
           </select>
         </div>
-
         <Button type="submit">Saqlash</Button>
       </form>
     </div>
