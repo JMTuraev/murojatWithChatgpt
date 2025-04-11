@@ -6,7 +6,6 @@ export default function MurojaatListPage() {
   const [murojaatlar, setMurojaatlar] = useState([]);
 
   useEffect(() => {
-    // Bu mock ma'lumot — kelajakda API'dan keladi
     const mockData = [
       {
         id: 1,
@@ -30,14 +29,6 @@ export default function MurojaatListPage() {
         telefon: "903443322",
         muammo: "Gaz yo‘q",
         manzil: "Toshkent, Uchtepa",
-        status: "bajarildi",
-      },
-      {
-        id: 4,
-        fio: "Zaynab Ro‘zmetova",
-        telefon: "933441100",
-        muammo: "Elektr energiyasi tez-tez o‘chadi",
-        manzil: "Romitan, Yangiobod",
         status: "tushuntirildi",
       },
     ];
@@ -63,7 +54,7 @@ export default function MurojaatListPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">📋 Murojaatlar Roʻyxati</h1>
+      <h1 className="text-2xl font-bold mb-4">\ud83d\udccb Murojaatlar Roʻyxati</h1>
 
       <div className="space-y-4">
         {murojaatlar.map((m) => (
@@ -81,9 +72,9 @@ export default function MurojaatListPage() {
                 {m.status}
               </span>
             </div>
-            <div className="text-sm text-gray-600">📞 {m.telefon}</div>
-            <div className="text-gray-700 mt-2">📝 {m.muammo}</div>
-            <div className="text-xs text-gray-500 italic">📍 {m.manzil}</div>
+            <div className="text-sm text-gray-600">\ud83d\udcde {m.telefon}</div>
+            <div className="text-gray-700 mt-2">\ud83d\udcc4 {m.muammo}</div>
+            <div className="text-xs text-gray-500 italic">\ud83d\udccd {m.manzil}</div>
 
             <div className="flex gap-3 mt-4">
               <Button onClick={() => alert(`Biriktirish: ${m.id}`)}>
