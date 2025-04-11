@@ -71,8 +71,9 @@ export default function MurojaatListPage() {
             key={m.id}
             className="border border-gray-200 rounded p-4 shadow-sm bg-white"
           >
+            <h1>{m.status} asd</h1>
             <div className="flex justify-between items-center">
-              <div className="font-semibold">{m.fio}</div>
+              <div className="font-semibold">{m.fio} sdsd</div>
               <span
                 className={`text-xs px-2 py-1 rounded font-medium ${statusStyle(
                   m.status
@@ -80,11 +81,12 @@ export default function MurojaatListPage() {
               >
                 {m.status}
               </span>
+              
             </div>
             <div className="text-sm text-gray-600">📞 {m.telefon}</div>
             <div className="text-gray-700 mt-2">📝 {m.muammo}</div>
             <div className="text-xs text-gray-500 italic">📍 {m.manzil}</div>
-
+            
             <div className="flex gap-3 mt-4">
               <Button onClick={() => alert(`Biriktirish: ${m.id}`)}>
                 Biriktirish
