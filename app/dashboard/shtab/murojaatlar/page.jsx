@@ -7,6 +7,7 @@ import {
   PhoneIcon,
   ClockIcon,
   EyeIcon,
+  FolderIcon 
 } from '@heroicons/react/24/outline';
 
 export default function ShtabMurojaatlarPage() {
@@ -55,8 +56,11 @@ export default function ShtabMurojaatlarPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">📂 Shtab Murojaatlari</h1>
+    <div className="pt-1">
+      <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
+  <FolderIcon className="w-6 h-6 text-indigo-600" />
+  Shtab Murojaatlari
+</h1>
       {xato && <p className="text-red-500">{xato}</p>}
       {!xato && data.length === 0 && <p>🔍 Murojaatlar topilmadi.</p>}
 
