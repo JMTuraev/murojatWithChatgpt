@@ -1,57 +1,152 @@
 'use client';
+
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function MurojaatlarPage() {
-  const [murojaatlar, setMurojaatlar] = useState([]);
+  const router = useRouter();
+  const [data, setData] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [filter, setFilter] = useState('barchasi');
+  const [search, setSearch] = useState('');
+  const [xato, setXato] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   useEffect(() => {
-    fetch('http://localhost:3001/murojaatlar')
-      .then(res => res.json())
-      .then(data => setMurojaatlar(data));
+    const fetchData = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/murojaatlar');
+        if (!res.ok) throw new Error('Serverdan xatolik');
+        const result = await res.json();
+        setData(result);
+        setFiltered(result);
+      } catch (err) {
+        setXato(err.message);
+      }
+    };
+    fetchData();
   }, []);
 
+  useEffect(() => {
+    let result = [...data];
+
+    if (filter !== 'barchasi') {
+      result = result.filter((item) => item.status === filter);
+    }
+
+    if (search.trim() !== '') {
+      const keyword = search.toLowerCase();
+      result = result.filter((item) =>
+        item.fio.toLowerCase().includes(keyword) || item.telefon.includes(keyword)
+      );
+    }
+
+    setFiltered(result);
+    setCurrentPage(1);
+  }, [filter, search, data]);
+
+  const paginatedData = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const badgeColor = (status) => {
+    switch (status) {
+      case 'yangi': return 'bg-gray-300 text-gray-700';
+      case 'biriktirildi': return 'bg-yellow-200 text-yellow-800';
+      case 'tushuntirildi': return 'bg-blue-200 text-blue-800';
+      case 'bajarildi': return 'bg-green-200 text-green-800';
+      case 'rad etildi': return 'bg-red-200 text-red-800';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Murojaatlar</h1>
-      <ul className="space-y-4">
-        {murojaatlar.map((item) => (
-          <li key={item.id} className="border rounded p-4 bg-white shadow">
-            <div className="flex justify-between items-center">
-              <div>
-                <p><strong>F.I.Sh:</strong> {item.fio}</p>
-                <p><strong>Muammo:</strong> {item.muammo}</p>
-              </div>
+    <div className="max-w-4xl mx-auto mt-8 p-4">
+      <h2 className="text-2xl font-bold mb-4">📄 Murojaatlar ro‘yxati</h2>
 
-              <div className="text-right">
-                {item.status === 'yangi' && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                    Yangi
-                  </span>
-                )}
-                {item.status === 'biriktirildi' && (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
-                    Biriktirilgan
-                  </span>
-                )}
+      {/* Filter va qidiruv */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border px-3 py-2 rounded"
+        >
+          <option value="barchasi">Barchasi</option>
+          <option value="yangi">Yangi</option>
+          <option value="biriktirildi">Biriktirildi</option>
+          <option value="tushuntirildi">Tushuntirildi</option>
+          <option value="bajarildi">Bajarildi</option>
+          <option value="rad etildi">Rad etildi</option>
+        </select>
 
-                {item.muddat && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Ijro muddati: {item.muddat}
-                  </p>
-                )}
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Qidiruv: ism yoki telefon"
+          className="border px-3 py-2 rounded w-full md:w-1/2"
+        />
+      </div>
 
-                <Link
-                  href={`/dashboard/operator/murojaatlar/${item.id}`}
-                  className="text-blue-500 text-sm mt-2 block"
-                >
-                  Batafsil
-                </Link>
-              </div>
+      {xato && <p className="text-red-500">❌ {xato}</p>}
+
+      {paginatedData.length === 0 && !xato && (
+        <p className="text-gray-500">Hech qanday murojaat topilmadi.</p>
+      )}
+
+      {paginatedData.map((item) => (
+        <div key={item.id} className="border rounded p-4 mb-3 shadow flex justify-between items-start">
+          <div>
+            <p><strong>👤 {item.fio}</strong></p>
+            <p>📞 {item.telefon}</p>
+            <p>📍 {item.manzil}</p>
+            <p>📝 {item.muammo}</p>
+            <span className={`inline-block px-2 py-1 mt-2 rounded text-sm font-medium ${badgeColor(item.status)}`}>
+              {item.status}
+            </span>
+            {item.muddat && (
+              <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">⏳ Ijro muddati: {item.muddat}</p>
+            )}
+
+            {/* Tugmalar pastda */}
+            <div className="mt-4 flex flex-col gap-2 items-start">
+              <button
+                onClick={() => router.push(`/dashboard/operator/murojaatlar/${item.id}`)}
+                className="text-blue-600 hover:underline text-sm"
+              >
+                ✏️ Tahrirlash
+              </button>
+              <button
+                onClick={() => router.push(`/dashboard/operator/murojaatlar/${item.id}/biriktirish`)}
+                className="text-green-600 hover:underline text-sm"
+              >
+                📌 Biriktirish
+              </button>
             </div>
-          </li>
-        ))}
-      </ul>
+          </div>
+        </div>
+      ))}
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-3 mt-6">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            disabled={currentPage === 1}
+          >
+            ⬅️
+          </button>
+          <span>Sahifa {currentPage} / {totalPages}</span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            disabled={currentPage === totalPages}
+          >
+            ➡️
+          </button>
+        </div>
+      )}
     </div>
   );
 }
