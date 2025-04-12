@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Input from "@/components/ui/Input";
@@ -12,9 +13,10 @@ export default function MurojaatStatusUpdatePage() {
   const [rasmlar, setRasmlar] = useState([]);
   const [rasmPreviews, setRasmPreviews] = useState([]);
   const [xabar, setXabar] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Mock ma’lumot
+    // Bu joyga kerakli GET api qo‘shish mumkin
     const mock = {
       id,
       fio: "Abdulloh Karimov",
@@ -39,7 +41,7 @@ export default function MurojaatStatusUpdatePage() {
     setRasmPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!status) {
@@ -47,15 +49,47 @@ export default function MurojaatStatusUpdatePage() {
       return;
     }
 
-    const formData = {
-      id,
-      yangiStatus: status,
-      izoh,
-      rasmlar: rasmlar.map((file) => file.name), // hozircha nomi
-    };
+    if (!izoh && rasmlar.length === 0) {
+      setXabar("❌ Izoh yoki rasm yuklang.");
+      return;
+    }
 
-    console.log("📤 Yuborilmoqda:", formData);
-    setXabar("✅ Ma’lumotlar muvaffaqiyatli yuborildi!");
+    setLoading(true);
+    setXabar("");
+
+    try {
+      // Rasm fayllari hozircha nomi bilan ketadi
+      const body = {
+        izoh,
+        rasmlar: rasmPreviews, // yoki file.name; haqiqiy upload bo‘lmasa
+      };
+
+      const res = await fetch(`http://localhost:3001/murojaatlar/${id}/izoh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error("Server bilan bog‘lanib bo‘lmadi");
+
+      // Endi status ham yangilanadi
+      const statusRes = await fetch(`http://localhost:3001/murojaatlar/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!statusRes.ok) throw new Error("Statusni yangilashda xatolik");
+
+      setXabar("✅ Ma’lumotlar muvaffaqiyatli yuborildi!");
+      setIzoh("");
+      setRasmlar([]);
+      setRasmPreviews([]);
+    } catch (err) {
+      setXabar("❌ Xatolik: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!murojaat) return <p className="p-6">Yuklanmoqda...</p>;
@@ -131,7 +165,9 @@ export default function MurojaatStatusUpdatePage() {
           )}
         </div>
 
-        <Button type="submit">Saqlash</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Yuborilmoqda..." : "Saqlash"}
+        </Button>
       </form>
     </div>
   );

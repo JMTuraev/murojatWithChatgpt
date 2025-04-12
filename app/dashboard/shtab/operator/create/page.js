@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useState } from "react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -13,6 +14,7 @@ export default function CreateOperatorPage() {
   });
 
   const [xabar, setXabar] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,25 +33,43 @@ export default function CreateOperatorPage() {
       return;
     }
 
-    // Bu yerda siz POST so‘rov yuborishingiz mumkin
-    // Masalan: fetch("https://mockapi.io/operator", { ... })
+    const yangiOperator = {
+      fio: `${form.ism} ${form.familiya}`,
+      login: form.login,
+      parol: form.parol,
+      telefon: "", // hozircha bo‘sh, keyinchalik qo‘shish mumkin
+      role: "operator",
+    };
 
-    console.log("Yangi operator:", form);
-    setXabar("✅ Operator muvaffaqiyatli qo‘shildi!");
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:3001/operatorlar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(yangiOperator),
+      });
 
-    // formani tozalash
-    setForm({
-      ism: "",
-      familiya: "",
-      login: "",
-      parol: "",
-      parolTasdiq: "",
-    });
+      if (!res.ok) throw new Error("Server bilan bog‘lanishda xatolik.");
+
+      setXabar("✅ Operator muvaffaqiyatli qo‘shildi!");
+      setForm({
+        ism: "",
+        familiya: "",
+        login: "",
+        parol: "",
+        parolTasdiq: "",
+      });
+    } catch (err) {
+      setXabar("❌ Xatolik: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow mt-10">
       <h2 className="text-xl font-bold mb-4 text-center">Yangi Operator Qo‘shish</h2>
+
       {xabar && (
         <p
           className={`text-center mb-4 ${
@@ -59,6 +79,7 @@ export default function CreateOperatorPage() {
           {xabar}
         </p>
       )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           name="ism"
@@ -92,7 +113,9 @@ export default function CreateOperatorPage() {
           value={form.parolTasdiq}
           onChange={handleChange}
         />
-        <Button type="submit">Qo‘shish</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Yuklanmoqda..." : "Qo‘shish"}
+        </Button>
       </form>
     </div>
   );
