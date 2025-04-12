@@ -1,86 +1,104 @@
-"use client";
-import { useState } from "react";
-import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
+'use client';
 
-export default function CreateMurojaatPage() {
-  const [form, setForm] = useState({
-    fio: "",
-    telefon: "",
-    muammo: "",
-    manzil: "",
+import { useState } from 'react';
+
+export default function YangiMurojaatPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    content: '',
+    address: '',
   });
 
-  const [xabar, setXabar] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setResult(null);
 
-    if (!/^\d{9}$/.test(form.telefon)) {
-      setXabar("❌ Telefon raqami 9 raqamdan iborat bo‘lishi kerak.");
-      return;
+    try {
+      const res = await fetch('http://localhost:3001/murojaatlar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error('Xatolik yuz berdi!');
+      }
+
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      setError(err.message || 'Noma’lum xatolik');
     }
-
-    if (!form.fio || !form.muammo || !form.manzil) {
-      setXabar("❌ Barcha maydonlarni to‘ldiring.");
-      return;
-    }
-
-    console.log("✅ Yangi murojaat:", form);
-    setXabar("✅ Murojaat muvaffaqiyatli qo‘shildi!");
-
-    setForm({
-      fio: "",
-      telefon: "",
-      muammo: "",
-      manzil: "",
-    });
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded shadow mt-10">
-      <h2 className="text-xl font-bold mb-4 text-center">Yangi Murojaat Qo‘shish</h2>
-      {xabar && (
-        <p
-          className={`text-center mb-4 ${
-            xabar.startsWith("✅") ? "text-green-600" : "text-red-500"
-          }`}
-        >
-          {xabar}
-        </p>
-      )}
+    <div className="max-w-md mx-auto mt-10 p-5 border rounded shadow bg-white">
+      <h2 className="text-2xl font-bold mb-4">Yangi murojaat qo‘shish</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          name="fio"
-          placeholder="F.I.Sh."
-          value={form.fio}
+        <input
+          type="text"
+          name="name"
+          placeholder="Ismingiz"
+          value={formData.name}
           onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
         />
-        <Input
-          name="telefon"
-          placeholder="Telefon raqami (9 raqam)"
-          value={form.telefon}
+        <input
+          type="text"
+          name="phone"
+          placeholder="Telefon raqamingiz"
+          value={formData.phone}
           onChange={handleChange}
-        />
-        <Input
-          name="manzil"
-          placeholder="Manzil"
-          value={form.manzil}
-          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
         />
         <textarea
-          name="muammo"
-          placeholder="Muammo tavsifi"
-          value={form.muammo}
+          name="content"
+          placeholder="Muammoni kiriting"
+          value={formData.content}
           onChange={handleChange}
-          className="border border-gray-300 rounded px-3 py-2 w-full min-h-[100px]"
-        ></textarea>
-        <Button type="submit">Yuborish</Button>
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="text"
+          name="address"
+          placeholder="Manzilingiz"
+          value={formData.address}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-white w-full py-2 rounded"
+        >
+          Yuborish
+        </button>
       </form>
+
+      {error && (
+        <p className="text-red-600 mt-4">❌ {error}</p>
+      )}
+
+      {result && (
+        <div className="mt-4 text-green-700">
+          <p>✅ {result.message}</p>
+          <p><strong>ID:</strong> {result.id}</p>
+          <p><strong>Status:</strong> {result.status}</p>
+        </div>
+      )}
     </div>
   );
 }
