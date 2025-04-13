@@ -58,8 +58,19 @@ export default function Navbar() {
         ]);
       } else if (r === 'operator') {
         setNavigation([
-          { name: 'Murojaatlar', href: '/dashboard/operator/murojaatlar' },
-          { name: 'Tashkilotlar', href: '/dashboard/operator/tashkilotlar' },
+          {
+            name: 'Murojaatlar',
+            href: '/dashboard/operator/murojaatlar',
+            badge: murojaatCount,
+          },
+          {
+            name: 'Biriktirilgan',
+            href: '/dashboard/operator/biriktirilgan',
+          },
+          {
+            name: 'Bajarilgan',
+            href: '/dashboard/operator/bajarilgan',
+          },
         ]);
       } else if (r === 'tashkilot') {
         setNavigation([
@@ -70,12 +81,13 @@ export default function Navbar() {
   }, [murojaatCount]);
 
   useEffect(() => {
-    // Faqat shtab uchun murojaat sonini yuklaymiz
+    // Murojaatlar sonini olish
     const fetchCount = async () => {
       try {
         const res = await fetch('http://localhost:3001/murojaatlar');
         const data = await res.json();
-        setMurojaatCount(data.length);
+        const yangi = data.filter((m) => m.status === 'yangi').length;
+        setMurojaatCount(yangi);
       } catch (error) {
         console.error('❌ Murojaatlarni olishda xatolik:', error);
       }

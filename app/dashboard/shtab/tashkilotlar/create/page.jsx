@@ -1,79 +1,161 @@
-"use client";
-import { useState } from "react";
-import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CreateTashkilotPage() {
+  const router = useRouter();
+
   const [form, setForm] = useState({
-    nomi: "",
-    manzil: "",
-    status: "faol",
+    toliqNomi: '',
+    qisqaNomi: '',
+    masulFio: '',
+    login: '',
+    parol: '',
+    parolTasdiq: '',
   });
 
-  const [xabar, setXabar] = useState("");
+  const [xabar, setXabar] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((old) => ({ ...old, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setXabar('');
+    setLoading(true);
 
-    if (!form.nomi || !form.manzil) {
-      setXabar("❌ Barcha maydonlarni to‘ldiring.");
+    if (form.parol !== form.parolTasdiq) {
+      setXabar('❌ Parollar mos emas!');
+      setLoading(false);
       return;
     }
 
-    console.log("✅ Yangi tashkilot:", form);
-    setXabar("✅ Tashkilot muvaffaqiyatli qo‘shildi!");
+    const yangiTashkilot = {
+      toliqNomi: form.toliqNomi,
+      qisqaNomi: form.qisqaNomi,
+      masulFio: form.masulFio,
+      login: form.login,
+      parol: form.parol,
+      yaratilganSana: new Date().toISOString(),
+    };
 
-    setForm({
-      nomi: "",
-      manzil: "",
-      status: "faol",
-    });
+    try {
+      const res = await fetch('http://localhost:3001/tashkilotlar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(yangiTashkilot),
+      });
+
+      if (!res.ok) throw new Error('Tashkilotni qo‘shishda xatolik yuz berdi.');
+
+      router.push('/dashboard/shtab/tashkilotlar');
+    } catch (err) {
+      setXabar('❌ ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4 text-center">Tashkilot Qo‘shish</h2>
+    <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded mt-10">
+      <h1 className="text-xl font-bold mb-4">🏢 Yangi Tashkilot Qo‘shish</h1>
+
       {xabar && (
-        <p
-          className={`text-center mb-4 ${
-            xabar.startsWith("✅") ? "text-green-600" : "text-red-500"
-          }`}
-        >
+        <p className={`mb-4 ${xabar.startsWith('❌') ? 'text-red-500' : 'text-green-600'}`}>
           {xabar}
         </p>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          name="nomi"
-          placeholder="Tashkilot nomi"
-          value={form.nomi}
-          onChange={handleChange}
-        />
-        <Input
-          name="manzil"
-          placeholder="Tashkilot manzili"
-          value={form.manzil}
-          onChange={handleChange}
-        />
         <div>
-          <label className="block mb-1 text-sm font-medium">Status:</label>
-          <select
-            name="status"
-            value={form.status}
+          <label className="block text-sm font-medium">Tashkilot to‘liq nomi</label>
+          <input
+            type="text"
+            name="toliqNomi"
+            value={form.toliqNomi}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          >
-            <option value="faol">Faol</option>
-            <option value="faol emas">Faol emas</option>
-          </select>
+            required
+            className="w-full mt-1 border px-3 py-2 rounded"
+          />
         </div>
-        <Button type="submit">Qo‘shish</Button>
+
+        <div>
+          <label className="block text-sm font-medium">Qisqa nomi</label>
+          <input
+            type="text"
+            name="qisqaNomi"
+            value={form.qisqaNomi}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 border px-3 py-2 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Mas’ul F.I.O</label>
+          <input
+            type="text"
+            name="masulFio"
+            value={form.masulFio}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 border px-3 py-2 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Login</label>
+          <input
+            type="text"
+            name="login"
+            value={form.login}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 border px-3 py-2 rounded"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Parol</label>
+            <input
+              type="password"
+              name="parol"
+              value={form.parol}
+              onChange={handleChange}
+              required
+              className="w-full mt-1 border px-3 py-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Parolni tasdiqlang</label>
+            <input
+              type="password"
+              name="parolTasdiq"
+              value={form.parolTasdiq}
+              onChange={handleChange}
+              required
+              className="w-full mt-1 border px-3 py-2 rounded"
+            />
+          </div>
+        </div>
+
+        <div className="text-right">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {loading ? '⏳ Yuborilmoqda...' : 'Qo‘shish'}
+          </button>
+        </div>
       </form>
     </div>
   );
