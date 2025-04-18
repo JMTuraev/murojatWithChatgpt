@@ -1,10 +1,10 @@
-// app/api/telegram/route.js
+// app/api/test/route.js
 
-export async function POST(req) {
-    const body = await req.json();
-    console.log('Telegram xabari:', body);
-  
-    // Javobni tekshirish uchun Telegramga qaytarmaymiz, faqat log qilamiz
-    return Response.json({ ok: true });
-  }
+export async function GET(request) {
+  console.log('✅ GET ishladi!');
+  return new Response(JSON.stringify({ message: 'App Router ishlayapti!' }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
   
