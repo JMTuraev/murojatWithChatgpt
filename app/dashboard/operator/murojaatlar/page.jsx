@@ -1,152 +1,149 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Button from '@/components/ui/Button';
+import { EyeIcon, MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline';
 
-export default function MurojaatlarPage() {
-  const router = useRouter();
-  const [data, setData] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [filter, setFilter] = useState('barchasi');
-  const [search, setSearch] = useState('');
-  const [xato, setXato] = useState('');
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
-  const totalPages = Math.ceil(filtered.length / pageSize);
+export default function OperatorMurojaatlarPage() {
+  const [murojaatlar, setMurojaatlar] = useState([]);
+  const [tashkilotlar, setTashkilotlar] = useState([]);
+  const [formValues, setFormValues] = useState({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('http://localhost:3001/murojaatlar');
-        if (!res.ok) throw new Error('Serverdan xatolik');
-        const result = await res.json();
-        setData(result);
-        setFiltered(result);
-      } catch (err) {
-        setXato(err.message);
-      }
+    const fetchMurojaatlar = async () => {
+      const res = await fetch('http://localhost:5000/murojaatlar');
+      const data = await res.json();
+      setMurojaatlar(data.filter((m) => !m.status));
     };
-    fetchData();
+
+    const fetchTashkilotlar = async () => {
+      const res = await fetch('http://localhost:3001/tashkilotlar');
+      const data = await res.json();
+      setTashkilotlar(data);
+    };
+
+    fetchMurojaatlar();
+    fetchTashkilotlar();
   }, []);
 
-  useEffect(() => {
-    let result = [...data];
+  const handleChange = (id, field, value) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }));
+  };
 
-    if (filter !== 'barchasi') {
-      result = result.filter((item) => item.status === filter);
+  const handleSubmit = async (id) => {
+    const { tashkilotId, muddat, birlik } = formValues[id] || {};
+    if (!tashkilotId || !muddat || !birlik || isNaN(muddat)) {
+      alert('❗ Barcha maydonlar to‘g‘ri to‘ldirilishi shart');
+      return;
     }
 
-    if (search.trim() !== '') {
-      const keyword = search.toLowerCase();
-      result = result.filter((item) =>
-        item.fio.toLowerCase().includes(keyword) || item.telefon.includes(keyword)
-      );
-    }
+    const now = new Date();
+    const ms =
+      birlik === 'kun' ? muddat * 86400000 :
+      birlik === 'soat' ? muddat * 3600000 :
+      muddat * 60000;
 
-    setFiltered(result);
-    setCurrentPage(1);
-  }, [filter, search, data]);
+    const deadline = new Date(now.getTime() + ms);
 
-  const paginatedData = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    await fetch(`http://localhost:3001/murojaatlar/${id}/biriktirish`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'biriktirildi',
+        tashkilotId: parseInt(tashkilotId),
+        muddat: deadline.toISOString(),
+      }),
+    });
 
-  const badgeColor = (status) => {
-    switch (status) {
-      case 'yangi': return 'bg-gray-300 text-gray-700';
-      case 'biriktirildi': return 'bg-yellow-200 text-yellow-800';
-      case 'tushuntirildi': return 'bg-blue-200 text-blue-800';
-      case 'bajarildi': return 'bg-green-200 text-green-800';
-      case 'rad etildi': return 'bg-red-200 text-red-800';
-      default: return 'bg-gray-100 text-gray-600';
-    }
+    setMurojaatlar((prev) => prev.filter((m) => m.id !== id));
   };
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-4">
-      <h2 className="text-2xl font-bold mb-4">📄 Murojaatlar ro‘yxati</h2>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">📂 Telegramdan kelgan murojaatlar</h1>
 
-      {/* Filter va qidiruv */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="barchasi">Barchasi</option>
-          <option value="yangi">Yangi</option>
-          <option value="biriktirildi">Biriktirildi</option>
-          <option value="tushuntirildi">Tushuntirildi</option>
-          <option value="bajarildi">Bajarildi</option>
-          <option value="rad etildi">Rad etildi</option>
-        </select>
+      <div className="space-y-6">
+        {murojaatlar.map((m) => {
+          const fv = formValues[m.id] || {};
+          return (
+            <div key={m.id} className="bg-white rounded shadow p-6 border">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-lg font-semibold">{m.username || "Noma'lum foydalanuvchi"}</h2>
+                  <p className="mt-1 text-gray-700">{m.text}</p>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Qidiruv: ism yoki telefon"
-          className="border px-3 py-2 rounded w-full md:w-1/2"
-        />
-      </div>
+                  <div className="mt-3 space-y-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <MapPinIcon className="w-4 h-4" />
+                      <span>Manzil ko‘rsatilmagan</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <PhoneIcon className="w-4 h-4" />
+                      <span>{m.phone || "Telefon raqam yo‘q"}</span>
+                    </div>
+                  </div>
+                </div>
 
-      {xato && <p className="text-red-500">❌ {xato}</p>}
+                <div className="text-sm text-gray-400 flex flex-col items-end">
+                  <span>{new Date(m.timestamp).toLocaleString()}</span>
+                  <EyeIcon className="w-6 h-6 mt-1 text-gray-400" />
+                </div>
+              </div>
 
-      {paginatedData.length === 0 && !xato && (
-        <p className="text-gray-500">Hech qanday murojaat topilmadi.</p>
-      )}
+              <div className="mt-4 border-t pt-4">
+                <div className="grid grid-cols-4 gap-3 items-center">
+                  <select
+                    className="border px-3 py-2 rounded w-full"
+                    value={fv.tashkilotId || ''}
+                    onChange={(e) => handleChange(m.id, 'tashkilotId', e.target.value)}
+                  >
+                    <option value="">Tashkilotni tanlang</option>
+                    {tashkilotlar.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.qisqaNomi}
+                      </option>
+                    ))}
+                  </select>
 
-      {paginatedData.map((item) => (
-        <div key={item.id} className="border rounded p-4 mb-3 shadow flex justify-between items-start">
-          <div>
-            <p><strong>👤 {item.fio}</strong></p>
-            <p>📞 {item.telefon}</p>
-            <p>📍 {item.manzil}</p>
-            <p>📝 {item.muammo}</p>
-            <span className={`inline-block px-2 py-1 mt-2 rounded text-sm font-medium ${badgeColor(item.status)}`}>
-              {item.status}
-            </span>
-            {item.muddat && (
-              <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">⏳ Ijro muddati: {item.muddat}</p>
-            )}
+                  <input
+                    type="text"
+                    placeholder="Muddat"
+                    value={fv.muddat || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^\d*$/.test(val)) handleChange(m.id, 'muddat', val);
+                    }}
+                    className="border px-3 py-2 rounded w-full"
+                  />
 
-            {/* Tugmalar pastda */}
-            <div className="mt-4 flex flex-col gap-2 items-start">
-              <button
-                onClick={() => router.push(`/dashboard/operator/murojaatlar/${item.id}`)}
-                className="text-blue-600 hover:underline text-sm"
-              >
-                ✏️ Tahrirlash
-              </button>
-              <button
-                onClick={() => router.push(`/dashboard/operator/murojaatlar/${item.id}/biriktirish`)}
-                className="text-green-600 hover:underline text-sm"
-              >
-                📌 Biriktirish
-              </button>
+                  <select
+                    className="border px-3 py-2 rounded w-full"
+                    value={fv.birlik || 'kun'}
+                    onChange={(e) => handleChange(m.id, 'birlik', e.target.value)}
+                  >
+                    <option value="kun">kun</option>
+                    <option value="soat">soat</option>
+                    <option value="minut">minut</option>
+                  </select>
+
+                  <Button
+                    onClick={() => handleSubmit(m.id)}
+                    className="w-full h-full"
+                  >
+                    Biriktirish
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      ))}
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-6">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            disabled={currentPage === 1}
-          >
-            ⬅️
-          </button>
-          <span>Sahifa {currentPage} / {totalPages}</span>
-          <button
-            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            disabled={currentPage === totalPages}
-          >
-            ➡️
-          </button>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }
