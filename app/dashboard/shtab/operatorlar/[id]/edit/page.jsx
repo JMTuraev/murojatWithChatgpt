@@ -7,12 +7,11 @@ export default function EditOperatorPage() {
   const { id } = useParams();
   const router = useRouter();
   const [form, setForm] = useState({
-    fio: '',
-    telefon: '',
+    ism: '',
+    familiya: '',
     login: '',
     parol: '',
     parolTasdiq: '',
-    role: 'operator',
   });
 
   const [loading, setLoading] = useState(true);
@@ -22,17 +21,24 @@ export default function EditOperatorPage() {
   useEffect(() => {
     const fetchOperator = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/operatorlar/${id}`);
+        const res = await fetch(`/api/users/${id}`);
         if (!res.ok) throw new Error('Ma’lumot topilmadi');
         const data = await res.json();
-        setForm({ ...data, parolTasdiq: data.parol });
+
+        setForm({
+          ism: data.ism || '',
+          familiya: data.familiya || '',
+          login: data.login || '',
+          parol: '',
+          parolTasdiq: '',
+        });
       } catch (err) {
         setXato(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchOperator();
+    if (id) fetchOperator();
   }, [id]);
 
   const handleChange = (e) => {
@@ -46,7 +52,6 @@ export default function EditOperatorPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Parolni tekshiramiz
     if (form.parol !== form.parolTasdiq) {
       setParolError('Parollar mos emas');
       return;
@@ -54,11 +59,17 @@ export default function EditOperatorPage() {
     setParolError('');
 
     try {
-      const res = await fetch(`http://localhost:3001/operatorlar/${id}`, {
+      const res = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ism: form.ism,
+          familiya: form.familiya,
+          login: form.login,
+          parol: form.parol,
+        }),
       });
+
       if (!res.ok) throw new Error('Yuborishda xatolik');
       router.push('/dashboard/shtab/operatorlar');
     } catch (err) {
@@ -74,27 +85,27 @@ export default function EditOperatorPage() {
       <h1 className="text-xl font-bold mb-4">✏️ Operatorni tahrirlash</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium">F.I.O</label>
+          <label className="block text-sm font-medium">Ism</label>
           <input
             type="text"
-            name="fio"
-            value={form.fio}
+            name="ism"
+            value={form.ism}
             onChange={handleChange}
             className="w-full mt-1 border px-3 py-2 rounded"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Telefon</label>
+          <label className="block text-sm font-medium">Familiya</label>
           <input
             type="text"
-            name="telefon"
-            value={form.telefon}
+            name="familiya"
+            value={form.familiya}
             onChange={handleChange}
             className="w-full mt-1 border px-3 py-2 rounded"
-            required
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium">Login</label>
           <input
@@ -124,9 +135,7 @@ export default function EditOperatorPage() {
             name="parolTasdiq"
             value={form.parolTasdiq}
             onChange={handleChange}
-            className={`w-full mt-1 border px-3 py-2 rounded ${
-              parolError ? 'border-red-500' : ''
-            }`}
+            className={`w-full mt-1 border px-3 py-2 rounded ${parolError ? 'border-red-500' : ''}`}
             required
           />
           {parolError && <p className="text-red-500 text-sm mt-1">{parolError}</p>}
