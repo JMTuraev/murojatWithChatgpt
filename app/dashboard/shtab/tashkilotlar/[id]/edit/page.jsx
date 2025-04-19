@@ -11,7 +11,8 @@ export default function EditTashkilotPage() {
   const [form, setForm] = useState({
     toliqNomi: '',
     qisqaNomi: '',
-    masulFio: '',
+    ism: '',
+    familiya: '',
     login: '',
     parol: '',
     parolTasdiq: '',
@@ -24,12 +25,17 @@ export default function EditTashkilotPage() {
   useEffect(() => {
     const fetchTashkilot = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/tashkilotlar/${id}`);
+        const res = await fetch(`/api/users/${id}`);
         if (!res.ok) throw new Error('Ma’lumot topilmadi');
         const data = await res.json();
         setForm({
-          ...data,
-          parolTasdiq: data.parol || '',
+          toliqNomi: data.toliqNomi  || '',
+          qisqaNomi: data.qisqaNomi || '',
+          ism: data.ism || '',
+          familiya: data.familiya || '',
+          login: data.login || '',
+          parol: '',
+          parolTasdiq: '',
         });
       } catch (err) {
         setXato(err.message);
@@ -58,10 +64,18 @@ export default function EditTashkilotPage() {
     setParolError('');
 
     try {
-      const res = await fetch(`http://localhost:3001/tashkilotlar/${id}`, {
+      const res = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          toliqNomi: form.toliqNomi,
+          qisqaNomi: form.qisqaNomi,
+          ism: form.ism,
+          familiya: form.familiya,
+          login: form.login,
+          parol: form.parol,
+          rol: 'tashkilot',
+        }),
       });
       if (!res.ok) throw new Error('Yuborishda xatolik');
       router.push('/dashboard/shtab/tashkilotlar');
@@ -100,15 +114,27 @@ export default function EditTashkilotPage() {
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium">Mas’ul F.I.O</label>
-          <input
-            name="masulFio"
-            value={form.masulFio}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-            required
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Mas’ul ismi</label>
+            <input
+              name="ism"
+              value={form.ism}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Mas’ul familiyasi</label>
+            <input
+              name="familiya"
+              value={form.familiya}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+              required
+            />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium">Login</label>

@@ -7,19 +7,29 @@ import { EyeIcon, MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline';
 export default function OperatorMurojaatlarPage() {
   const [murojaatlar, setMurojaatlar] = useState([]);
   const [tashkilotlar, setTashkilotlar] = useState([]);
-  const [formValues, setFormValues] = useState({});
+  const [formValues, setFormValues] = useState([]);
 
   useEffect(() => {
     const fetchMurojaatlar = async () => {
-      const res = await fetch('http://localhost:5000/murojaatlar');
-      const data = await res.json();
-      setMurojaatlar(data.filter((m) => !m.status));
+      try {
+        const res = await fetch('/api/webhook');
+        if (!res.ok) throw new Error('Murojaatlar olinmadi');
+        const data = await res.json();
+        setMurojaatlar(data.filter((m) => m.status_id === 1));
+      } catch (err) {
+        console.error('❌ Murojaat olishda xatolik:', err.message);
+      }
     };
 
     const fetchTashkilotlar = async () => {
-      const res = await fetch('http://localhost:3001/tashkilotlar');
-      const data = await res.json();
-      setTashkilotlar(data);
+      try {
+        const res = await fetch('/api/users?rol=tashkilot');
+        if (!res.ok) throw new Error('Tashkilotlar olinmadi');
+        const data = await res.json();
+        setTashkilotlar(data);
+      } catch (err) {
+        console.error('❌ Tashkilot olishda xatolik:', err.message);
+      }
     };
 
     fetchMurojaatlar();
@@ -51,7 +61,7 @@ export default function OperatorMurojaatlarPage() {
 
     const deadline = new Date(now.getTime() + ms);
 
-    await fetch(`http://localhost:3001/murojaatlar/${id}/biriktirish`, {
+    await fetch(`/api/murojaatlar/${id}/biriktirish`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -75,7 +85,9 @@ export default function OperatorMurojaatlarPage() {
             <div key={m.id} className="bg-white rounded shadow p-6 border">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-lg font-semibold">{m.username || "Noma'lum foydalanuvchi"}</h2>
+                  <h2 className="text-lg font-semibold">
+                    {m.username || "Noma'lum foydalanuvchi"}
+                  </h2>
                   <p className="mt-1 text-gray-700">{m.text}</p>
 
                   <div className="mt-3 space-y-1 text-sm text-gray-500">

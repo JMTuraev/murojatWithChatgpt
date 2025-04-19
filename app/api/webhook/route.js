@@ -9,6 +9,8 @@ export async function POST(req) {
       return Response.json({ ok: false, message: "Majburiy maydonlar yo‘q" }, { status: 400 });
     }
 
+    console.log(body);
+
     const { error } = await supabase
       .from('murojaatlar')
       .insert([{
@@ -29,4 +31,18 @@ export async function POST(req) {
     console.error("❌ JSON parse xatolik:", e.message);
     return Response.json({ ok: false }, { status: 400 });
   }
+}
+
+
+export async function GET() {
+  const { data, error } = await supabase
+    .from('murojaatlar')
+    .select('*')
+    .eq('status_id', 1); // faqat yangi holatda
+
+  if (error) {
+    return Response.json({ error: '❌ Olishda xato: ' + error.message }, { status: 500 });
+  }
+
+  return Response.json(data);
 }

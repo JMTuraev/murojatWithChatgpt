@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabaseClient';
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { ism, familiya, login, parol } = body;
-    if (!ism || !familiya || !login || !parol ) {
+    const { toliqNomi, qisqaNomi, ism, familiya, login, parol, rol } = body;
+    if (!ism || !familiya || !login || !parol || !qisqaNomi || !toliqNomi ) {
       return Response.json({ error: '❌ Barcha maydonlar to‘ldirilishi shart' }, { status: 400 });
     }
 
@@ -24,7 +24,9 @@ export async function POST(req) {
         familiya,
         login,
         parol: hashedParol,
-        rol: 'operator',
+        rol,
+        toliq_nomi: rol === 'tashkilot' ? toliqNomi : null,
+        qisqa_nomi: rol === 'tashkilot' ? qisqaNomi : null,
       }
     ]);
 
@@ -42,23 +44,36 @@ export async function POST(req) {
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const rol = searchParams.get('rol') || 'operator';
-
+    
   const { data, error } = await supabase
     .from('users')
-    .select('id, ism, familiya')
+    .select('id, ism, familiya, login,  toliq_nomi, qisqa_nomi')
     .eq('rol', rol);
 
   if (error) {
     return Response.json({ error: '❌ Olishda xato: ' + error.message }, { status: 500 });
   }
 
-  // front uchun kerakli formatga tayyorlash
-  const tayyor = data.map((u) => ({
-    id: u.id,
-    familiya: u.familiya,
-    ism: u.ism,
-    
-  }));
+  let tayyor = [];
+
+  if (rol === 'operator') {
+    tayyor = data.map((u) => ({
+      id: u.id,
+      ism: u.ism,
+      familiya: u.familiya,
+    }));
+  } else if (rol === 'tashkilot') {
+    tayyor = data.map((u) => ({
+      id: u.id,
+      toliqNomi: u.toliq_nomi,
+      qisqaNomi: u.qisqa_nomi,
+      ism: u.ism,
+      familiya: u.familiya,
+      login: u.login,
+      parol: u.parol,
+    }));
+  }
+  
 
   return Response.json(tayyor);
 }

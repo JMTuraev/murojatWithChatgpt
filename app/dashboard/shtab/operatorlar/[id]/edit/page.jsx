@@ -67,6 +67,7 @@ export default function EditOperatorPage() {
           familiya: form.familiya,
           login: form.login,
           parol: form.parol,
+          rol:"operator"
         }),
       });
 
