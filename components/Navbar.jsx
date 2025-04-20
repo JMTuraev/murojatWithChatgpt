@@ -1,4 +1,5 @@
 'use client';
+import { useAuth } from '@/app/context/auth-context';
 
 import {
   Disclosure,
@@ -35,27 +36,9 @@ export default function Navbar() {
   const [role, setRole] = useState('');
   const [navigation, setNavigation] = useState([]);
   const [murojaatCount, setMurojaatCount] = useState(0);
-
-  const [user, setUser] = useState(null);
-
-
-
-useEffect(() => {
-  const fetchUser = async () => {
-    const res = await fetch('/api/me');
-    const result = await res.json();
-
-    if (res.ok) {
-      setUser(result.user);
-    } else {
-      // Token yo‘q yoki noto‘g‘ri => login sahifasiga redirect
-      window.location.href = '/login';
-    }
-  };
-
-  fetchUser();
-}, []);
-
+  
+  const { user, loading } = useAuth();
+console.log(user);
 
   useEffect(() => {
     const r = sessionStorage.getItem('role');
@@ -114,7 +97,7 @@ useEffect(() => {
   }, []);
 
   if (!role) return null;
-console.log(user);
+
   return (
     <Disclosure as="nav" className="bg-white shadow-sm">
       {({ open }) => (
