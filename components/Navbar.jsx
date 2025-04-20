@@ -53,7 +53,7 @@ export default function Navbar() {
             badge: murojaatCount,
           },
           { name: 'Operatorlar', href: '/dashboard/shtab/operatorlar' },
-          { name: 'Tashkilotlar', href: '/dashboard/shtab/tashkilotlar' },
+          { name: 'Tashkilotlar', href: '/dashboard/shtab/tashkilotlar/murojaatlar' },
           { name: 'Statistika', href: '/dashboard/statistika' },
         ]);
       } else if (r === 'operator') {
@@ -131,6 +131,7 @@ export default function Navbar() {
                       )}
                     </a>
                   ))}
+                  <h3>{role} uchiraman</h3>
                 </div>
               </div>
 

@@ -5,10 +5,19 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const { toliqNomi, qisqaNomi, ism, familiya, login, parol, rol } = body;
-    if (!ism || !familiya || !login || !parol || !qisqaNomi || !toliqNomi ) {
-      return Response.json({ error: '❌ Barcha maydonlar to‘ldirilishi shart' }, { status: 400 });
-    }
+   
+if(rol==="tashkilot"){
+  if (!ism || !familiya || !login || !parol || !qisqaNomi || !toliqNomi ) {
+    return Response.json({ error: '❌ Barcha maydonlar to‘ldirilishi shart' }, { status: 400 });
+  }
+}
 
+
+if(rol==="operator"){
+  if (!ism || !familiya || !login || !parol ) {
+    return Response.json({ error: '❌ Barcha maydonlar to‘ldirilishi shart' }, { status: 400 });
+  }
+}
 
     // 🔐 Parolni crypto.subtle yordamida hash qilish
     const encoder = new TextEncoder();
