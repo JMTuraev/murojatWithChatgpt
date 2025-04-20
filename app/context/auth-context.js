@@ -1,4 +1,3 @@
-// app/context/auth-context.js
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -12,12 +11,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const res = await fetch('/api/me');
+        const res = await fetch('/api/me', {
+          method: 'GET',
+          credentials: 'include', // 🍪 Cookie yuborish uchun muhim
+        });
+
         const data = await res.json();
 
-        if (data.ok) setUser(data.user);
-        else setUser(null);
+        if (data.ok) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
       } catch (err) {
+        console.error('❌ Foydalanuvchini olishda xatolik:', err);
         setUser(null);
       } finally {
         setLoading(false);
