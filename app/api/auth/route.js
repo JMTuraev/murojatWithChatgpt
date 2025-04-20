@@ -1,9 +1,10 @@
+// app/api/auth/route.js
+import { cookies } from 'next/headers';
 import supabaseAdmin from '@/lib/supabaseAdmin';
 
 export async function POST(req) {
   try {
     const { login, parol } = await req.json();
-    console.log(login, parol);
     if (!login || !parol) {
       return Response.json(
         { error: '❗ Login va parol kiritilishi shart' },
@@ -20,8 +21,7 @@ export async function POST(req) {
         password: parol,
       });
 
-    // ❌ Noto‘g‘ri login yoki parol
-    if (authError || !authData?.user) {
+    if (authError || !authData?.session?.access_token) {
       return Response.json(
         { error: '❌ Login yoki parol noto‘g‘ri' },
         { status: 401 }
@@ -44,11 +44,15 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Muvaffaqiyatli login
-    return Response.json({
-      ok: true,
-      user,
+    // 🍪 Tokenni cookie-ga yozamiz
+    const token = authData.session.access_token;
+    cookies().set('sb-token', token, {
+      httpOnly: true,
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 kun
     });
+
+    return Response.json({ ok: true, user });
   } catch (e) {
     return Response.json(
       { error: '❌ Server xatosi: ' + e.message },

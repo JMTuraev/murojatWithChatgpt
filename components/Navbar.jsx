@@ -17,11 +17,7 @@ import {
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const user = {
-  name: 'Tom Cook',
-  email: 'tom@example.com',
-  imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-};
+
 
 const userNavigation = [
   { name: 'Profil', href: '#' },
@@ -33,11 +29,33 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
+
 export default function Navbar() {
   const pathname = usePathname();
   const [role, setRole] = useState('');
   const [navigation, setNavigation] = useState([]);
   const [murojaatCount, setMurojaatCount] = useState(0);
+
+  const [user, setUser] = useState(null);
+
+
+
+useEffect(() => {
+  const fetchUser = async () => {
+    const res = await fetch('/api/me');
+    const result = await res.json();
+
+    if (res.ok) {
+      setUser(result.user);
+    } else {
+      // Token yo‘q yoki noto‘g‘ri => login sahifasiga redirect
+      window.location.href = '/login';
+    }
+  };
+
+  fetchUser();
+}, []);
+
 
   useEffect(() => {
     const r = sessionStorage.getItem('role');
@@ -96,7 +114,7 @@ export default function Navbar() {
   }, []);
 
   if (!role) return null;
-
+console.log(user);
   return (
     <Disclosure as="nav" className="bg-white shadow-sm">
       {({ open }) => (
@@ -131,7 +149,7 @@ export default function Navbar() {
                       )}
                     </a>
                   ))}
-                  <h3>{role} uchiraman</h3>
+                  <h3>{user?.rol} uchiraman</h3>
                 </div>
               </div>
 
@@ -146,7 +164,7 @@ export default function Navbar() {
                 <Menu as="div" className="relative ml-3">
                   <div>
                     <MenuButton className="flex rounded-full bg-white text-sm focus:ring-2 focus:ring-indigo-500">
-                      <img className="h-8 w-8 rounded-full" src={user.imageUrl} alt="" />
+                      <img className="h-8 w-8 rounded-full" src={user?.imageUrl} alt="" />
                     </MenuButton>
                   </div>
                   <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
