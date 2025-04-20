@@ -156,7 +156,7 @@ export default function EditTashkilotPage() {
               value={form.parol}
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded"
-              required
+              
             />
           </div>
           <div>
@@ -169,7 +169,6 @@ export default function EditTashkilotPage() {
               className={`w-full border px-3 py-2 rounded ${
                 parolError ? 'border-red-500' : ''
               }`}
-              required
             />
             {parolError && <p className="text-sm text-red-500 mt-1">{parolError}</p>}
           </div>

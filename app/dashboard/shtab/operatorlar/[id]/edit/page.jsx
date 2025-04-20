@@ -126,7 +126,7 @@ export default function EditOperatorPage() {
             value={form.parol}
             onChange={handleChange}
             className="w-full mt-1 border px-3 py-2 rounded"
-            required
+            
           />
         </div>
         <div>
@@ -137,7 +137,7 @@ export default function EditOperatorPage() {
             value={form.parolTasdiq}
             onChange={handleChange}
             className={`w-full mt-1 border px-3 py-2 rounded ${parolError ? 'border-red-500' : ''}`}
-            required
+            
           />
           {parolError && <p className="text-red-500 text-sm mt-1">{parolError}</p>}
         </div>
