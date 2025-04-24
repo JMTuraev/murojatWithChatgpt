@@ -13,7 +13,7 @@ import {
 import RejectedList from '@/components/RejectedList';
 
 export default function OperatorBiriktirilganPage() {
-  const [biriktirilgan, setbiriktirilgan] = useState([]);
+  const [biriktirilgan, setBiriktirilgan] = useState([]);
   const [radEtilganlar, setRadEtilganlar] = useState([]);
   const [xato, setXato] = useState('');
   const router = useRouter();
@@ -21,15 +21,16 @@ export default function OperatorBiriktirilganPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:3001/murojaatlar');
+        const res = await fetch('/api/webhook');
         if (!res.ok) throw new Error('Serverdan noto‘g‘ri javob');
         const result = await res.json();
 
-        const biriktirilgan = result.filter(item => item.status === 'biriktirildi');
-        const radEtilgan = result.filter(item => item.status === 'rad etildi');
 
-        setbiriktirilgan(biriktirilgan);
-        setRadEtilganlar(radEtilgan);
+        const filteredBiriktirilgan = result?.filter(item => item.status_id === 2);
+        const filteredRadEtilgan = result?.filter(item => item.status_id === 4);
+console.log(filteredBiriktirilgan);
+        setBiriktirilgan(filteredBiriktirilgan);
+        setRadEtilganlar(filteredRadEtilgan);
       } catch (err) {
         setXato('Xatolik: ' + err.message);
       }
@@ -78,7 +79,7 @@ export default function OperatorBiriktirilganPage() {
           >
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-gray-900">{item.fio}</h3>
-              <span className={statusBadge(item.status)}>biriktirildi</span>
+              <span className={statusBadge('biriktirildi')}>biriktirildi</span>
             </div>
 
             <p className="text-sm text-gray-600 line-clamp-3">{item.muammo}</p>
@@ -95,7 +96,7 @@ export default function OperatorBiriktirilganPage() {
               {item.muddat && (
                 <div className="flex items-center gap-1">
                   <ClockIcon className="w-4 h-4" />
-                  <span>Muddat: {item.muddat}</span>
+                  <span>Muddat: {new Date(item.muddat).toLocaleString()}</span>
                 </div>
               )}
             </div>

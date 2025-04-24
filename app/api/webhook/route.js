@@ -37,8 +37,8 @@ export async function POST(req) {
 export async function GET() {
   const { data, error } = await supabase
     .from('murojaatlar')
-    .select('*')
-    .eq('status_id', 1); // faqat yangi holatda
+    .select(`*`);
+   
 
   if (error) {
     return Response.json({ error: '❌ Olishda xato: ' + error.message }, { status: 500 });

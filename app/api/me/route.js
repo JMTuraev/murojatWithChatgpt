@@ -5,7 +5,9 @@ import supabaseAdmin from '@/lib/supabaseAdmin';
 export async function GET() {
   try {
     const cookieStore = cookies();
-    const token = cookieStore.get('sb-token')?.value;
+    console.log("test")
+    console.log(cookieStore);
+    const token =  cookieStore.get('sb-token')?.value;
 
     if (!token) {
       return Response.json(

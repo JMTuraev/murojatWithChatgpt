@@ -44,13 +44,15 @@ export async function POST(req) {
       );
     }
 
-    // 🍪 Tokenni cookie-ga yozamiz
-    const token = authData.session.access_token;
-    cookies().set('sb-token', token, {
-      httpOnly: true,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 kun
-    });
+ // 🍪 Tokenni cookie-ga yozamiz (✅ await bilan)
+const token = authData.session.access_token;
+const cookieStore = await cookies(); // await shart
+
+cookieStore.set('sb-token', token, {
+  httpOnly: true,
+  path: '/',
+  maxAge: 60 * 60 * 24 * 7, // 7 kun
+});
 
     return Response.json({ ok: true, user });
   } catch (e) {
