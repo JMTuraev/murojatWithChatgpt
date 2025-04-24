@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/app/context/auth-context';
+import { useMurojaat } from '@/app/context/murojaat-context';
+
 import {
   Disclosure,
   DisclosureButton,
@@ -30,7 +32,7 @@ export default function Navbar() {
   const router = useRouter();
 
   const [navigation, setNavigation] = useState([]);
-  const [murojaatCount, setMurojaatCount] = useState(0);
+  const { murojaatCount } = useMurojaat();
 
   const handleLogout = async () => {
     try {
@@ -46,32 +48,23 @@ export default function Navbar() {
     }
   };
 
-  useEffect(() => {
-    const fetchCount = async () => {
-      try {
-        const res = await fetch('/api/webhook');
-        const data = await res.json();
-        const yangi = data.filter((m) => status_id === 1).length;
-        setMurojaatCount(yangi);
-      } catch (err) {
-        console.error('❌ Murojaatlar sonida xato:', err);
-      }
-    };
-    fetchCount();
-  }, []);
-
+ 
   useEffect(() => {
     if (!user?.rol) return;
     const routes = {
       shtab: [
         { name: 'Bosh Sahifa', href: '/dashboard/shtab' },
-        { name: 'Murojaatlar', href: '/dashboard/shtab/murojaatlar', badge: 1 },
+        { name: 'Murojaatlar', href: '/dashboard/shtab/murojaatlar' },
         { name: 'Operatorlar', href: '/dashboard/shtab/operatorlar' },
         { name: 'Tashkilotlar', href: '/dashboard/shtab/tashkilotlar/murojaatlar' },
         { name: 'Statistika', href: '/dashboard/statistika' },
       ],
       operator: [
-        { name: 'Murojaatlar', href: '/dashboard/operator/murojaatlar', badge: 1 },
+        {
+          name: 'Murojaatlar',
+          href: '/dashboard/operator/murojaatlar',
+          badge: murojaatCount,
+        },
         { name: 'Biriktirilgan', href: '/dashboard/operator/biriktirilgan' },
         { name: 'Bajarilgan', href: '/dashboard/operator/bajarilgan' },
         { name: 'Arxiv', href: '/dashboard/operator/arxiv' },

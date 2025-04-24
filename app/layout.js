@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { AuthProvider } from '@/app/context/auth-context';
+import { MurojaatProvider } from '@/app/context/murojaat-context';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
       >
         <AuthProvider>
+        <MurojaatProvider>
           <div className="min-h-full">
             <Navbar />
             <main>
@@ -33,6 +35,8 @@ export default function RootLayout({ children }) {
               </div>
             </main>
           </div>
+          
+        </MurojaatProvider>
         </AuthProvider>
       </body>
     </html>

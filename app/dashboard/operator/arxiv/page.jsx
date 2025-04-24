@@ -5,84 +5,86 @@ import { useRouter } from 'next/navigation';
 import {
   FolderIcon,
   EyeIcon,
-  PencilIcon,
   MapPinIcon,
   PhoneIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import RejectedList from '@/components/RejectedList';
-
-// Telefon raqamni oddiy formatlash funksiyasi
-function formatPhone(phone) {
-  if (!phone) return '';
-  return phone.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '+998 ($1) $2-$3-$4');
-}
-
-// Status badge rangini aniqlash
-function statusBadge(nomi) {
-  const base = 'inline-block px-2 py-1 text-xs font-semibold rounded-full';
-  switch (nomi) {
-    case 'yangi':
-      return `${base} bg-blue-100 text-blue-800`;
-    case 'biriktirildi':
-      return `${base} bg-indigo-100 text-indigo-800`;
-    case 'ko‘rilmoqda':
-      return `${base} bg-yellow-100 text-yellow-800`;
-    case 'rad etildi':
-      return `${base} bg-red-100 text-red-800`;
-    case 'bajarildi':
-      return `${base} bg-green-100 text-green-800`;
-    case 'bekor qilindi':
-      return `${base} bg-gray-100 text-gray-800`;
-    case 'murojaat emas':
-      return `${base} bg-red-200 text-red-900`;
-    default:
-      return `${base} bg-gray-100 text-gray-800`;
-  }
-}
 
 export default function OperatorArxivPage() {
-  const router = useRouter();
-  const [biriktirilgan, setBiriktirilgan] = useState([]);
-  const [radEtilganlar, setRadEtilganlar] = useState([]);
+  const [data, setData] = useState([]);
   const [xato, setXato] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchMurojaatlar = async () => {
+    const fetchArchive = async () => {
       try {
-        const res = await fetch('/api/webhook');
+        const res = await fetch('/api/archive', { credentials: 'include' });
         if (!res.ok) throw new Error('Maʼlumotlarni olishda xatolik');
-        const data = await res.json();
-
-        // 7 — "murojaat emas", 4 — "rad etildi"
-        const murojatEmas = data.filter((m) => m.status_id === 7);
-        const radEtilgan = data.filter((m) => m.status_id === 4);
-
-        setBiriktirilgan(murojatEmas);
-        setRadEtilganlar(radEtilgan);
+        const archiveData = await res.json();
+        setData(archiveData);
       } catch (err) {
         setXato(err.message);
+        console.error('❌ Arxiv murojaatlarni olishda xatolik:', err.message);
       }
     };
 
-    fetchMurojaatlar();
+    fetchArchive();
   }, []);
+
+  const formatPhone = (raw) => {
+    if (!raw) return '';
+    const digits = raw.replace(/\D/g, '').slice(-9);
+    return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5, 7)}-${digits.slice(7)}`;
+  };
 
   return (
     <div className="pt-1">
       <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
         <FolderIcon className="w-6 h-6 text-indigo-600" />
-        Arxivlangan Murojaatlar
+        Arxivdagi murojaatlar
       </h1>
 
-      <RejectedList data={radEtilganlar} />
-
       {xato && <p className="text-red-500">{xato}</p>}
-      {!xato && biriktirilgan.length === 0 && (
-        <p>🔍 Murojaat emas holatdagi murojaatlar topilmadi.</p>
-      )}
+      {!xato && data?.length === 0 && <p>🔍 Arxivda murojaatlar topilmadi.</p>}
 
+      <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        {data.map((item) => (
+          <li
+            key={item.id}
+            className="relative col-span-1 rounded-lg bg-white shadow-sm p-5 flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-900">{item.username || "Noma'lum"}</h3>
+            </div>
 
+            <p className="text-sm text-gray-600 line-clamp-3">{item.text}</p>
+
+            <div className="mt-4 space-y-1 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <MapPinIcon className="w-4 h-4" />
+                <span>Manzil ko‘rsatilmagan</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <PhoneIcon className="w-4 h-4" />
+                <span>{formatPhone(item.phone)}</span>
+              </div>
+              {item.muddat && (
+                <div className="flex items-center gap-1">
+                  <ClockIcon className="w-4 h-4" />
+                  <span>Muddat: {new Date(item.muddat).toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => router.push(`/dashboard/operator/murojaat/${item.id}`)}
+              className="absolute bottom-4 right-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2"
+            >
+              <EyeIcon className="w-5 h-5" />
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -3,11 +3,16 @@
 import { useEffect, useState } from 'react';
 import Button from '@/components/ui/Button';
 import { EyeIcon, MapPinIcon, PhoneIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/app/context/auth-context';
+import { useMurojaat } from '@/app/context/murojaat-context';
 
 export default function OperatorMurojaatlarPage() {
   const [murojaatlar, setMurojaatlar] = useState([]);
   const [tashkilotlar, setTashkilotlar] = useState([]);
   const [formValues, setFormValues] = useState([]);
+  const { user, loading } = useAuth();
+  const { fetchCount } = useMurojaat();
+
 
   const handleMarkAsNotMurojaat = async (id) => {
     try {
@@ -16,11 +21,13 @@ export default function OperatorMurojaatlarPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status_id: 7 }),
+        body: JSON.stringify({ status_id: 7 }), // faqat status, operator_id serverda token bilan aniqlanadi
       });
-
+  
       const data = await res.json();
+  
       if (!res.ok) throw new Error(data.error || 'Xatolik yuz berdi');
+      fetchCount(); // 🔁 avtomatik countni yangilash
 
       setMurojaatlar((prev) => prev.filter((m) => m.id !== id));
     } catch (err) {
@@ -28,18 +35,26 @@ export default function OperatorMurojaatlarPage() {
       alert('Statusni o‘zgartirishda xatolik yuz berdi');
     }
   };
+  
+    
 
-  useEffect(() => {
-    const fetchMurojaatlar = async () => {
-      try {
-        const res = await fetch('/api/webhook');
-        if (!res.ok) throw new Error('Murojaatlar olinmadi');
-        const data = await res.json();
-        setMurojaatlar(data.filter((m) => m.status_id === 1));
-      } catch (err) {
-        console.error('❌ Murojaat olishda xatolik:', err.message);
-      }
-    };
+    useEffect(() => {
+      const fetchMurojaatlar = async () => {
+        try {
+          const res = await fetch('/api/webhook' , {
+            method: 'GET',
+            credentials: 'include',
+          });
+        
+
+          if (!res.ok) throw new Error('Murojaatlar olinmadi');
+          const {data} = await res.json();
+          console.log(data, "data");
+          setMurojaatlar(data.filter((m) => m.status_id === 1));
+        } catch (err) {
+          console.error('❌ Murojaat olishda xatolik:', err.message);
+        }
+      };
 
     const fetchTashkilotlar = async () => {
       try {
@@ -188,7 +203,7 @@ export default function OperatorMurojaatlarPage() {
                   </select>
 
                   <Button
-                    onClick={() => handleSubmit(m.id)}
+                    onClick={() =>{ handleSubmit(m.id), fetchCount() }}// 🔁 avtomatik countni yangilash                    
                     className="w-full h-full"
                   >
                     Biriktirish
