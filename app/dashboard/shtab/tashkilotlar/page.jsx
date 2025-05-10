@@ -13,7 +13,7 @@ export default function TashkilotlarPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:3001/tashkilotlar');
+        const res = await fetch('/api/users?rol=tashkilot');
         if (!res.ok) throw new Error('Serverdan noto‘g‘ri javob');
         const data = await res.json();
         setTashkilotlar(data);
@@ -27,6 +27,7 @@ export default function TashkilotlarPage() {
     fetchData();
   }, []);
 
+  console.log(tashkilotlar);
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -45,6 +46,8 @@ export default function TashkilotlarPage() {
         <p>❗ Hech qanday tashkilot topilmadi.</p>
       )}
 
+      
+
       {!loading && tashkilotlar.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tashkilotlar.map((t) => (
@@ -60,26 +63,22 @@ export default function TashkilotlarPage() {
                   <EllipsisVerticalIcon className="w-5 h-5" />
                 </button>
               </div>
-              <h2 className="text-lg font-semibold mb-1 truncate overflow-hidden text-ellipsis">                {t.toliqNomi}</h2>
+              <h2 className="text-lg font-semibold mb-1 truncate overflow-hidden text-ellipsis">
+                {t.toliqNomi}
+              </h2>
               <p className="text-sm text-gray-600 mb-1">
                 <strong>Qisqa nom:</strong> {t.qisqaNomi}
               </p>
               <p className="text-sm text-gray-600 mb-1">
-                <strong>Mas'ul:</strong> {t.masulFIO}
+                <strong>Mas'ul:</strong> {t.ism} {t.familiya}
               </p>
               <p className="text-sm text-gray-600 mb-1">
                 <strong>Login:</strong> {t.login}
               </p>
-              <p className="text-sm text-gray-600 mb-1">
-                <strong>Parol:</strong> {t.parol}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                ⏱ Yaratilgan: {new Date(t.yaratilganSana).toLocaleDateString()}
-              </p>
-                {/* ID pastki o‘ng burchakda */}
-  <div className="absolute bottom-2 right-3 text-xs font-mono text-gray-400">
-    #{t.id}
-  </div>
+          
+              <div className="absolute bottom-2 right-3 text-xs font-mono text-gray-400">
+                #{t.id}
+              </div>
             </div>
           ))}
         </div>

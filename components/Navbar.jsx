@@ -1,5 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+import { useAuth } from '@/app/context/auth-context';
+import { useMurojaat } from '@/app/context/murojaat-context';
+
 import {
   Disclosure,
   DisclosureButton,
@@ -12,90 +16,67 @@ import {
 import {
   Bars3Icon,
   BellIcon,
+  InboxArrowDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-const user = {
-  name: 'Tom Cook',
-  email: 'tom@example.com',
-  imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-};
-
-const userNavigation = [
-  { name: 'Profil', href: '#' },
-  { name: 'Sozlamalar', href: '#' },
-  { name: 'Chiqish', href: '#' },
-];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
 export default function Navbar() {
+  const { user, loading } = useAuth();
   const pathname = usePathname();
-  const [role, setRole] = useState('');
+  const router = useRouter();
+
   const [navigation, setNavigation] = useState([]);
-  const [murojaatCount, setMurojaatCount] = useState(0);
+  const { murojaatCount } = useMurojaat();
 
-  useEffect(() => {
-    const r = sessionStorage.getItem('role');
-    if (r) {
-      setRole(r);
-
-      if (r === 'shtab') {
-        setNavigation([
-          { name: 'Bosh Sahifa', href: '/dashboard/shtab' },
-          {
-            name: 'Murojaatlar',
-            href: '/dashboard/shtab/murojaatlar',
-            badge: murojaatCount,
-          },
-          { name: 'Operatorlar', href: '/dashboard/shtab/operatorlar' },
-          { name: 'Tashkilotlar', href: '/dashboard/shtab/tashkilotlar' },
-          { name: 'Statistika', href: '/dashboard/statistika' },
-        ]);
-      } else if (r === 'operator') {
-        setNavigation([
-          {
-            name: 'Murojaatlar',
-            href: '/dashboard/operator/murojaatlar',
-            badge: murojaatCount,
-          },
-          {
-            name: 'Biriktirilgan',
-            href: '/dashboard/operator/biriktirilgan',
-          },
-          {
-            name: 'Bajarilgan',
-            href: '/dashboard/operator/bajarilgan',
-          },
-        ]);
-      } else if (r === 'tashkilot') {
-        setNavigation([
-          { name: 'Murojaatlar', href: '/dashboard/tashkilot/murojaatlar' },
-        ]);
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('/api/logout', { method: 'POST' });
+      const result = await res.json();
+      if (result.ok) {
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('role');
+        router.push('/login');
       }
+    } catch (err) {
+      console.error('❌ Logout xatolik:', err);
     }
-  }, [murojaatCount]);
+  };
 
+ 
   useEffect(() => {
-    // Murojaatlar sonini olish
-    const fetchCount = async () => {
-      try {
-        const res = await fetch('http://localhost:3001/murojaatlar');
-        const data = await res.json();
-        const yangi = data.filter((m) => m.status === 'yangi').length;
-        setMurojaatCount(yangi);
-      } catch (error) {
-        console.error('❌ Murojaatlarni olishda xatolik:', error);
-      }
+    if (!user?.rol) return;
+    const routes = {
+      shtab: [
+        { name: 'Bosh Sahifa', href: '/dashboard/shtab' },
+        { name: 'Murojaatlar', href: '/dashboard/shtab/murojaatlar' },
+        { name: 'Operatorlar', href: '/dashboard/shtab/operatorlar' },
+        { name: 'Tashkilotlar', href: '/dashboard/shtab/tashkilotlar/murojaatlar' },
+        { name: 'Statistika', href: '/dashboard/statistika' },
+      ],
+      operator: [
+        {
+          name: 'Murojaatlar',
+          href: '/dashboard/operator/murojaatlar',
+          badge: murojaatCount,
+        },
+        { name: 'Biriktirilgan', href: '/dashboard/operator/biriktirilgan' },
+        { name: 'Bajarilgan', href: '/dashboard/operator/bajarilgan' },
+        { name: 'Arxiv', href: '/dashboard/operator/arxiv' },
+      ],
+      tashkilot: [
+        { name: 'Murojaatlar', href: '/dashboard/tashkilot' },
+      ],
     };
-    fetchCount();
-  }, []);
+    setNavigation(routes[user.rol] || []);
+  }, [user, murojaatCount]);
 
-  if (!role) return null;
+  if (loading || !user?.rol) return null;
 
   return (
     <Disclosure as="nav" className="bg-white shadow-sm">
@@ -104,16 +85,12 @@ export default function Navbar() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 justify-between">
               <div className="flex">
-                <div className="flex shrink-0 items-center">
-                  <img
-                    className="h-8 w-auto"
-                    src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                    alt="Logo"
-                  />
+                <div className="flex items-center">
+                  <InboxArrowDownIcon className="h-8 w-8 text-indigo-600" />
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                   {navigation.map((item) => (
-                    <a
+                    <Link
                       key={item.name}
                       href={item.href}
                       className={classNames(
@@ -129,7 +106,7 @@ export default function Navbar() {
                           {item.badge}
                         </span>
                       )}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -139,42 +116,41 @@ export default function Navbar() {
                   type="button"
                   className="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500"
                 >
-                  <BellIcon className="h-6 w-6" aria-hidden="true" />
+                  <BellIcon className="h-6 w-6" />
                 </button>
 
                 <Menu as="div" className="relative ml-3">
                   <div>
-                    <MenuButton className="flex rounded-full bg-white text-sm focus:ring-2 focus:ring-indigo-500">
-                      <img className="h-8 w-8 rounded-full" src={user.imageUrl} alt="" />
+                    <MenuButton className="flex items-center justify-center h-10 w-10 rounded-full bg-white text-indigo-600 text-sm font-bold ring-2 ring-indigo-500">
+                      {user.ism.charAt(0).toUpperCase()}
+                      {user.familiya.charAt(0).toUpperCase()}
                     </MenuButton>
                   </div>
                   <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-                    {userNavigation.map((item) => (
-                      <MenuItem key={item.name}>
-                        {({ active }) => (
-                          <a
-                            href={item.href}
-                            className={classNames(
-                              active ? 'bg-gray-100' : '',
-                              'block px-4 py-2 text-sm text-gray-700'
-                            )}
-                          >
-                            {item.name}
-                          </a>
-                        )}
-                      </MenuItem>
-                    ))}
+                    <MenuItem>
+                      {({ active }) => (
+                        <button
+                          onClick={handleLogout}
+                          className={classNames(
+                            active ? 'bg-gray-100' : '',
+                            'w-full text-left px-4 py-2 text-sm text-gray-700'
+                          )}
+                        >
+                          Chiqish
+                        </button>
+                      )}
+                    </MenuItem>
                   </MenuItems>
                 </Menu>
               </div>
 
               <div className="-mr-2 flex items-center sm:hidden">
                 <DisclosureButton className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500">
-                  <span className="sr-only">Open main menu</span>
+                  <span className="sr-only">Open menu</span>
                   {open ? (
-                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                    <XMarkIcon className="block h-6 w-6" />
                   ) : (
-                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                    <Bars3Icon className="block h-6 w-6" />
                   )}
                 </DisclosureButton>
               </div>
@@ -184,9 +160,8 @@ export default function Navbar() {
           <DisclosurePanel className="sm:hidden">
             <div className="space-y-1 pt-2 pb-3">
               {navigation.map((item) => (
-                <DisclosureButton
+                <Link
                   key={item.name}
-                  as="a"
                   href={item.href}
                   className={classNames(
                     pathname === item.href
@@ -201,8 +176,14 @@ export default function Navbar() {
                       {item.badge}
                     </span>
                   )}
-                </DisclosureButton>
+                </Link>
               ))}
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left border-l-4 py-2 pl-3 pr-4 text-base font-medium text-red-600 hover:bg-gray-50"
+              >
+                Chiqish
+              </button>
             </div>
           </DisclosurePanel>
         </>

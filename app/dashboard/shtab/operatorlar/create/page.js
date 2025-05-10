@@ -33,32 +33,27 @@ export default function CreateOperatorPage() {
       return;
     }
 
-    const yangiOperator = {
-      fio: `${form.ism} ${form.familiya}`,
-      login: form.login,
-      parol: form.parol,
-      telefon: "", // hozircha bo‘sh, keyinchalik qo‘shish mumkin
-      role: "operator",
-    };
-
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:3001/operatorlar", {
+
+      const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(yangiOperator),
+        body: JSON.stringify({
+          login: form.login,
+          parol: form.parol,
+          ism: form.ism,
+          familiya: form.familiya,
+          rol: "operator",
+        }),
       });
 
-      if (!res.ok) throw new Error("Server bilan bog‘lanishda xatolik.");
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Serverda xatolik yuz berdi");
 
       setXabar("✅ Operator muvaffaqiyatli qo‘shildi!");
-      setForm({
-        ism: "",
-        familiya: "",
-        login: "",
-        parol: "",
-        parolTasdiq: "",
-      });
+      setForm({ ism: "", familiya: "", login: "", parol: "", parolTasdiq: "" });
     } catch (err) {
       setXabar("❌ Xatolik: " + err.message);
     } finally {

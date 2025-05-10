@@ -10,15 +10,37 @@ export default function OperatorlarPage() {
   const [xato, setXato] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3001/operatorlar')
-      .then((res) => res.json())
-      .then(setOperatorlar)
-      .catch((err) => setXato('Xatolik: ' + err.message));
+    const fetchOperatorlar = async () => {
+      try {
+        const res = await fetch('/api/users?rol=operator');
+        const data = await res.json();
+  
+        // Qo‘shimcha tekshiruv
+        console.log('✅ Kelgan data:', data);
+  
+        // To‘g‘ri array bo‘lsa set qilamiz
+        if (Array.isArray(data)) {
+          setOperatorlar(data);
+        } else {
+          setXato('❌ Xatolik: Kutilgan array emas');
+        }
+      } catch (err) {
+        setXato('❌ Xatolik: ' + err.message);
+      }
+    };
+  
+    fetchOperatorlar();
   }, []);
+  
 
   const formatPhone = (raw) => {
+    if (!raw) return 'Noma’lum';
     const digits = raw.replace(/\D/g, '').slice(-9);
     return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5, 7)}-${digits.slice(7)}`;
+  };
+
+  const getInitials = (ism, familiya) => {
+    return `${(ism?.[0] || '').toUpperCase()}${(familiya?.[0] || '').toUpperCase()}`;
   };
 
   return (
@@ -45,7 +67,13 @@ export default function OperatorlarPage() {
             key={op.id}
             className="relative bg-white rounded-lg shadow p-4 flex flex-col items-center text-center"
           >
-            {/* 3 nuqta tugma */}
+
+              {/* #ID ko‘rsatish */}
+  <span className="absolute top-2 left-2 text-xl  text-gray-700 px-2 py-1 rounded font-semibold">
+    #{op.id}
+  </span>
+
+
             <button
               onClick={() => router.push(`/dashboard/shtab/operatorlar/${op.id}/edit`)}
               className="absolute top-2 right-2 text-gray-500 hover:text-indigo-600"
@@ -55,32 +83,13 @@ export default function OperatorlarPage() {
             </button>
 
             {/* Avatar */}
-            {op.rasm ? (
-              <img
-                src={op.rasm}
-                alt={op.fio}
-                className="w-24 h-24 rounded-full object-cover mb-2"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2">
-                <UserIcon className="w-12 h-12 text-gray-500" />
-              </div>
-            )}
+            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2 text-3xl font-bold text-gray-600">
+              {getInitials(op.ism, op.familiya)}
+            </div>
 
             {/* Ism, telefon */}
-            <h3 className="font-semibold text-lg">{op.fio}</h3>
-            <p className="text-sm text-gray-600">{formatPhone(op.telefon)}</p>
-
-            {/* Online / Offline badge */}
-            <span
-              className={`mt-2 inline-block px-3 py-1 text-xs rounded-full ${
-                op.status === 'online'
-                  ? 'bg-green-100 text-green-700 ring-1 ring-green-300'
-                  : 'bg-gray-100 text-gray-500 ring-1 ring-gray-300'
-              }`}
-            >
-              {op.status === 'online' ? 'Online' : 'Offline'}
-            </span>
+            <h3 className="font-semibold text-lg">{op.ism} {op.familiya}</h3>
+            
           </li>
         ))}
       </ul>

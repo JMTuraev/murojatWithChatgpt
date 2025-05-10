@@ -9,7 +9,8 @@ export default function CreateTashkilotPage() {
   const [form, setForm] = useState({
     toliqNomi: '',
     qisqaNomi: '',
-    masulFio: '',
+    ism: '',
+    familiya: '',
     login: '',
     parol: '',
     parolTasdiq: '',
@@ -39,14 +40,15 @@ export default function CreateTashkilotPage() {
     const yangiTashkilot = {
       toliqNomi: form.toliqNomi,
       qisqaNomi: form.qisqaNomi,
-      masulFio: form.masulFio,
+      ism: form.ism,
+      familiya: form.familiya,
       login: form.login,
       parol: form.parol,
-      yaratilganSana: new Date().toISOString(),
+      rol: 'tashkilot',
     };
 
     try {
-      const res = await fetch('http://localhost:3001/tashkilotlar', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(yangiTashkilot),
@@ -97,16 +99,30 @@ export default function CreateTashkilotPage() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium">Mas’ul F.I.O</label>
-          <input
-            type="text"
-            name="masulFio"
-            value={form.masulFio}
-            onChange={handleChange}
-            required
-            className="w-full mt-1 border px-3 py-2 rounded"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Mas’ul ismi</label>
+            <input
+              type="text"
+              name="ism"
+              value={form.ism}
+              onChange={handleChange}
+              required
+              className="w-full mt-1 border px-3 py-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Familiyasi</label>
+            <input
+              type="text"
+              name="familiya"
+              value={form.familiya}
+              onChange={handleChange}
+              required
+              className="w-full mt-1 border px-3 py-2 rounded"
+            />
+          </div>
         </div>
 
         <div>

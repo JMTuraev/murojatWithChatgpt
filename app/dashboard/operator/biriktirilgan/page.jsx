@@ -13,7 +13,7 @@ import {
 import RejectedList from '@/components/RejectedList';
 
 export default function OperatorBiriktirilganPage() {
-  const [biriktirilgan, setbiriktirilgan] = useState([]);
+  const [biriktirilgan, setBiriktirilgan] = useState([]);
   const [radEtilganlar, setRadEtilganlar] = useState([]);
   const [xato, setXato] = useState('');
   const router = useRouter();
@@ -21,19 +21,22 @@ export default function OperatorBiriktirilganPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:3001/murojaatlar');
+        const res = await fetch('/api/webhook/operator', {
+          credentials: 'include',
+        });
         if (!res.ok) throw new Error('Serverdan noto‘g‘ri javob');
         const result = await res.json();
 
-        const biriktirilgan = result.filter(item => item.status === 'biriktirildi');
-        const radEtilgan = result.filter(item => item.status === 'rad etildi');
+        const filteredBiriktirilgan = result.filter(item => item.status_id === 2);
+        const filteredRadEtilgan = result.filter(item => item.status_id === 4);
 
-        setbiriktirilgan(biriktirilgan);
-        setRadEtilganlar(radEtilgan);
+        setBiriktirilgan(filteredBiriktirilgan);
+        setRadEtilganlar(filteredRadEtilgan);
       } catch (err) {
         setXato('Xatolik: ' + err.message);
       }
     };
+
     fetchData();
   }, []);
 
@@ -45,17 +48,8 @@ export default function OperatorBiriktirilganPage() {
     return `${last9.slice(0, 2)}-${last9.slice(2, 5)}-${last9.slice(5, 7)}-${last9.slice(7)}`;
   };
 
-  const statusBadge = (status) => {
-    const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ';
-    switch (status) {
-      case 'biriktirildi':
-        return base + 'text-blue-700 bg-blue-50 ring-blue-600/20';
-      case 'rad etildi':
-        return base + 'text-red-700 bg-red-50 ring-red-600/20';
-      default:
-        return base + 'text-gray-700 bg-gray-50 ring-gray-600/20';
-    }
-  };
+  const statusBadge = () =>
+    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset text-blue-700 bg-blue-50 ring-blue-600/20';
 
   return (
     <div className="pt-1">
@@ -64,7 +58,6 @@ export default function OperatorBiriktirilganPage() {
         Biriktirilgan Murojaatlar
       </h1>
 
-      {/* RAD ETILGANLAR KOMPONENTI */}
       <RejectedList data={radEtilganlar} />
 
       {xato && <p className="text-red-500">{xato}</p>}
@@ -77,16 +70,16 @@ export default function OperatorBiriktirilganPage() {
             className="relative col-span-1 rounded-lg bg-white shadow-sm p-5 flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-900">{item.fio}</h3>
-              <span className={statusBadge(item.status)}>biriktirildi</span>
+              <h3 className="text-sm font-semibold text-gray-900">{item.fio || 'Foydalanuvchi'}</h3>
+              <span className={statusBadge()}>biriktirildi</span>
             </div>
 
-            <p className="text-sm text-gray-600 line-clamp-3">{item.muammo}</p>
+            <p className="text-sm text-gray-600 line-clamp-3">{item.muammo || item.text}</p>
 
             <div className="mt-4 space-y-1 text-xs text-gray-500">
               <div className="flex items-center gap-1">
                 <MapPinIcon className="w-4 h-4" />
-                <span>{item.manzil}</span>
+                <span>{item.manzil || 'Manzil ko‘rsatilmagan'}</span>
               </div>
               <div className="flex items-center gap-1">
                 <PhoneIcon className="w-4 h-4" />
@@ -95,19 +88,11 @@ export default function OperatorBiriktirilganPage() {
               {item.muddat && (
                 <div className="flex items-center gap-1">
                   <ClockIcon className="w-4 h-4" />
-                  <span>Muddat: {item.muddat}</span>
+                  <span>Muddat: {new Date(item.muddat).toLocaleString()}</span>
                 </div>
               )}
             </div>
 
-            {/* ✅ Tashkilot nomi pastda (truncate bilan) */}
-            {item.tashkilot?.nomi && (
-              <div className="mt-2 text-xs text-gray-500 italic truncate max-w-full">
-                {item.tashkilot.nomi}
-              </div>
-            )}
-
-            {/* 👁 Ko‘rish + ✏️ Tahrirlash */}
             <div className="absolute bottom-4 right-4 flex gap-2">
               <button
                 onClick={() => router.push(`/dashboard/operator/murojaat/${item.id}`)}
